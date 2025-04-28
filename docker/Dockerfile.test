@@ -1,0 +1,20 @@
+# Use OpenJDK 21 base image
+FROM openjdk:21-slim AS test
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven curl
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the pom.xml first to install dependencies (leverages Docker cache)
+COPY pom.xml .
+
+# Install dependencies (this will only run if pom.xml changes)
+RUN mvn dependency:go-offline
+
+# Now copy the rest of the project files, including testng.xml
+COPY . .
+
+# Run the tests
+CMD ["mvn", "test", "-DsuiteXmlFile=src/test/resources/testng.xml"]
